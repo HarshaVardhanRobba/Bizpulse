@@ -2,9 +2,11 @@ import { date, integer, jsonb, numeric, pgTable, timestamp, varchar } from "driz
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull().unique(),
   name: varchar({ length: 255 }).notNull(),
   age: integer().notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // Inventory domain — SkuEntity
