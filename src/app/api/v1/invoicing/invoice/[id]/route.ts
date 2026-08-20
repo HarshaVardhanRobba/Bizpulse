@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { AppError } from "@/lib/shared/app-error";
+import { withErrorHandling } from "@/lib/api/with-error-handling";
+import { ok } from "@/lib/api/response";
 import { NotFoundError } from "@/lib/shared/not-found-error";
 import { InvoicingRepository } from "@/lib/invoicing/invoicing-repository";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
+export const GET = withErrorHandling<{ params: Promise<{ id: string }> }>(
+  async (_req, { params }) => {
     const { id } = await params;
     const invoiceId = Number(id);
     const repository = new InvoicingRepository();
@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!invoice) {
       throw new NotFoundError("Invoice", invoiceId);
     }
-    return NextResponse.json({
+    return ok({
       id: invoice.id,
       tenantId: invoice.tenantId,
       customerId: invoice.customerId,
@@ -28,10 +28,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       status: invoice.status,
       createdAt: invoice.createdAt,
     });
-  } catch (err) {
-    if (err instanceof AppError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.statusCode });
-    }
-    throw err;
   }
-}
+);

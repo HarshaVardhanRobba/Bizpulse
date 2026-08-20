@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { AppError } from "@/lib/shared/app-error";
+import { withErrorHandling } from "@/lib/api/with-error-handling";
+import { ok } from "@/lib/api/response";
 import { adjustStock } from "@/lib/inventory/adjust-stock";
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
+export const PATCH = withErrorHandling<{ params: Promise<{ id: string }> }>(
+  async (req, { params }) => {
     const { id } = await params;
     const body = await req.json();
     const sku = await adjustStock({ skuId: Number(id), delta: body.delta });
-    return NextResponse.json({
+    return ok({
       id: sku.id,
       tenantId: sku.tenantId,
       name: sku.name,
@@ -16,10 +16,5 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       reorderThreshold: sku.stockLevel.reorderThreshold,
       createdAt: sku.createdAt,
     });
-  } catch (err) {
-    if (err instanceof AppError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.statusCode });
-    }
-    throw err;
   }
-}
+);

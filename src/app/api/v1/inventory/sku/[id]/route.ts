@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { AppError } from "@/lib/shared/app-error";
+import { withErrorHandling } from "@/lib/api/with-error-handling";
+import { ok } from "@/lib/api/response";
 import { NotFoundError } from "@/lib/shared/not-found-error";
 import { InventoryRepository } from "@/lib/inventory/inventory-repository";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
+export const GET = withErrorHandling<{ params: Promise<{ id: string }> }>(
+  async (_req, { params }) => {
     const { id } = await params;
     const skuId = Number(id);
     const repository = new InventoryRepository();
@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!sku) {
       throw new NotFoundError("Sku", skuId);
     }
-    return NextResponse.json({
+    return ok({
       id: sku.id,
       tenantId: sku.tenantId,
       name: sku.name,
@@ -21,10 +21,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       reorderThreshold: sku.stockLevel.reorderThreshold,
       createdAt: sku.createdAt,
     });
-  } catch (err) {
-    if (err instanceof AppError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.statusCode });
-    }
-    throw err;
   }
-}
+);
