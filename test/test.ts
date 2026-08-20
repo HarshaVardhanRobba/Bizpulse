@@ -9,12 +9,12 @@ async function seed() {
   ]);
 
   await db.insert(employeeTable).values([
-    { name: "Alex Rivera", salary: "65000.00", filingStatus: "single", hireDate: "2023-03-01" },
+    { name: "Alex Rivera", salary: "65000.00", filingStatus: "single", joiningDate: "2023-03-01" },
     {
       name: "Jordan Lee",
       salary: "82000.00",
       filingStatus: "married_joint",
-      hireDate: "2022-07-15",
+      joiningDate: "2022-07-15",
     },
   ]);
 
