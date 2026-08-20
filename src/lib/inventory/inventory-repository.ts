@@ -26,6 +26,11 @@ export class InventoryRepository implements BaseRepository<SkuEntity, number> {
     return row ? toEntity(row) : null;
   }
 
+  async list(executor: DbExecutor = db): Promise<SkuEntity[]> {
+    const rows = await executor.select().from(skuTable);
+    return rows.map(toEntity);
+  }
+
   async findBySkuCode(skuCode: string, executor: DbExecutor = db): Promise<SkuEntity | null> {
     const [row] = await executor
       .select()
