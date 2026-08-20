@@ -53,7 +53,7 @@ export const employeeTable = pgTable("employee", {
   name: varchar({ length: 255 }).notNull(),
   salary: numeric({ precision: 12, scale: 2 }).notNull(),
   filingStatus: varchar("filing_status", { length: 50 }).notNull(),
-  hireDate: date("hire_date").notNull(),
+  joiningDate: date("joining_date").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
