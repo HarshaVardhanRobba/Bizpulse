@@ -1,7 +1,8 @@
 import { BaseEntity } from "@/lib/shared/base-entity";
 import { ValidationError } from "@/lib/shared/validation-error";
-import { calculateInvoiceTotals } from "./calculate-invoice-totals";
+import { calculateInvoiceTotalsCents } from "./calculate-invoice-totals";
 import type { InvoiceLineItem } from "./invoice-lineitem";
+import { centsToDollars } from "./money";
 
 export type InvoiceStatus = "draft" | "issued" | "paid" | "void";
 
@@ -18,9 +19,9 @@ export class InvoiceEntity extends BaseEntity<number> {
   readonly tenantId: number | null;
   readonly customerId: number;
   readonly lineItems: InvoiceLineItem[];
-  readonly subtotal: number;
-  readonly tax: number;
-  readonly total: number;
+  readonly subtotalCents: number;
+  readonly taxCents: number;
+  readonly totalCents: number;
   readonly status: InvoiceStatus;
   readonly createdAt: Date;
 
@@ -31,10 +32,22 @@ export class InvoiceEntity extends BaseEntity<number> {
     this.lineItems = props.lineItems;
     this.status = props.status;
     this.createdAt = props.createdAt;
-    const totals = calculateInvoiceTotals(props.lineItems);
-    this.subtotal = totals.subtotal;
-    this.tax = totals.tax;
-    this.total = totals.total;
+    const totals = calculateInvoiceTotalsCents(props.lineItems);
+    this.subtotalCents = totals.subtotalCents;
+    this.taxCents = totals.taxCents;
+    this.totalCents = totals.totalCents;
+  }
+
+  get subtotal(): number {
+    return centsToDollars(this.subtotalCents);
+  }
+
+  get tax(): number {
+    return centsToDollars(this.taxCents);
+  }
+
+  get total(): number {
+    return centsToDollars(this.totalCents);
   }
 
   static create(props: InvoiceProps): InvoiceEntity {

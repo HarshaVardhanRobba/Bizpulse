@@ -2,9 +2,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { invoiceLineItemTable, invoiceTable } from "@/db/schema";
 import { NotFoundError } from "@/lib/shared/not-found-error";
+import { parseNumericColumn } from "@/lib/shared/parse-numeric";
 import type { DbExecutor } from "@/lib/inventory/inventory-repository";
 import { InvoiceEntity, type InvoiceStatus } from "./invoice-entity";
 import { InvoiceLineItem } from "./invoice-lineitem";
+import { centsToDecimalString } from "./money";
 
 export interface CreateInvoiceProps {
   tenantId: number | null;
@@ -17,7 +19,9 @@ async function loadLineItems(invoiceId: number, executor: DbExecutor): Promise<I
     .select()
     .from(invoiceLineItemTable)
     .where(eq(invoiceLineItemTable.invoiceId, invoiceId));
-  return rows.map((row) => InvoiceLineItem.create(row.skuId, row.quantity, Number(row.unitPrice)));
+  return rows.map((row) =>
+    InvoiceLineItem.create(row.skuId, row.quantity, parseNumericColumn(row.unitPrice, "unitPrice"))
+  );
 }
 
 function toEntity(
@@ -68,9 +72,9 @@ export class InvoicingRepository {
       .values({
         tenantId: props.tenantId,
         customerId: props.customerId,
-        subtotal: draft.subtotal.toFixed(2),
-        tax: draft.tax.toFixed(2),
-        total: draft.total.toFixed(2),
+        subtotal: centsToDecimalString(draft.subtotalCents),
+        tax: centsToDecimalString(draft.taxCents),
+        total: centsToDecimalString(draft.totalCents),
         status: "draft",
       })
       .returning();
@@ -80,8 +84,8 @@ export class InvoicingRepository {
         invoiceId: row.id,
         skuId: item.skuId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice.toFixed(2),
-        lineTotal: item.lineTotal.toFixed(2),
+        unitPrice: centsToDecimalString(item.unitPriceCents),
+        lineTotal: centsToDecimalString(item.lineTotalCents),
       }))
     );
 

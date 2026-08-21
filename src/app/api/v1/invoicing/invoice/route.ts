@@ -1,6 +1,8 @@
 import { withErrorHandling } from "@/lib/api/with-error-handling";
+import { parseRequestBody } from "@/lib/api/parse-request";
 import { created, ok } from "@/lib/api/response";
 import { createInvoice } from "@/lib/invoicing/create-invoice";
+import { createInvoiceRequestSchema } from "@/lib/invoicing/invoice-request-schema";
 import { InvoicingRepository } from "@/lib/invoicing/invoicing-repository";
 import type { InvoiceEntity } from "@/lib/invoicing/invoice-entity";
 
@@ -24,7 +26,7 @@ function serialize(invoice: InvoiceEntity) {
 }
 
 export const POST = withErrorHandling(async (req) => {
-  const body = await req.json();
+  const body = parseRequestBody(createInvoiceRequestSchema, await req.json());
   const invoice = await createInvoice({
     tenantId: body.tenantId ?? null,
     customerId: body.customerId,

@@ -1,3 +1,3 @@
-export function calculateLineItemSubtotal(quantity: number, unitPrice: number): number {
-  return Math.round(quantity * unitPrice * 100) / 100;
+export function calculateLineItemSubtotalCents(quantity: number, unitPriceCents: number): number {
+  return quantity * unitPriceCents;
 }

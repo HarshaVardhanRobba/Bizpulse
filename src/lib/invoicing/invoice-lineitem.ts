@@ -1,12 +1,13 @@
 import { ValidationError } from "@/lib/shared/validation-error";
-import { calculateLineItemSubtotal } from "./calculate-lineitem-subtotal";
+import { calculateLineItemSubtotalCents } from "./calculate-lineitem-subtotal";
+import { centsToDollars, dollarsToCents } from "./money";
 
 export class InvoiceLineItem {
   private constructor(
     readonly skuId: number,
     readonly quantity: number,
-    readonly unitPrice: number,
-    readonly lineTotal: number
+    readonly unitPriceCents: number,
+    readonly lineTotalCents: number
   ) {}
 
   static create(skuId: number, quantity: number, unitPrice: number): InvoiceLineItem {
@@ -16,11 +17,20 @@ export class InvoiceLineItem {
     if (unitPrice < 0) {
       throw new ValidationError("unitPrice must be non-negative");
     }
+    const unitPriceCents = dollarsToCents(unitPrice);
     return new InvoiceLineItem(
       skuId,
       quantity,
-      unitPrice,
-      calculateLineItemSubtotal(quantity, unitPrice)
+      unitPriceCents,
+      calculateLineItemSubtotalCents(quantity, unitPriceCents)
     );
+  }
+
+  get unitPrice(): number {
+    return centsToDollars(this.unitPriceCents);
+  }
+
+  get lineTotal(): number {
+    return centsToDollars(this.lineTotalCents);
   }
 }
