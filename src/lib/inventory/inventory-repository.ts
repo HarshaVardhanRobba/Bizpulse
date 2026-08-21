@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { skuTable } from "@/db/schema";
 import type { BaseRepository } from "@/lib/shared/base-repository";
 import { NotFoundError } from "@/lib/shared/not-found-error";
+import { ValidationError } from "@/lib/shared/validation-error";
 import { SkuEntity } from "./sku-entity";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -76,6 +77,27 @@ export class InventoryRepository implements BaseRepository<SkuEntity, number> {
       .returning();
     if (!row) {
       throw new NotFoundError("Sku", entity.id);
+    }
+    return toEntity(row);
+  }
+
+  async decrementQuantity(
+    id: number,
+    amount: number,
+    executor: DbExecutor = db
+  ): Promise<SkuEntity> {
+    const [row] = await executor
+      .update(skuTable)
+      .set({ quantity: sql`${skuTable.quantity} - ${amount}` })
+      .where(and(eq(skuTable.id, id), gte(skuTable.quantity, amount)))
+      .returning();
+
+    if (!row) {
+      const existing = await this.findById(id, executor);
+      if (!existing) {
+        throw new NotFoundError("Sku", id);
+      }
+      throw new ValidationError("insufficient stock");
     }
     return toEntity(row);
   }

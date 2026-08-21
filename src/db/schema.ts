@@ -1,4 +1,14 @@
-import { date, integer, jsonb, numeric, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  check,
+  date,
+  integer,
+  jsonb,
+  numeric,
+  pgTable,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -10,15 +20,19 @@ export const usersTable = pgTable("users", {
 });
 
 // Inventory domain — SkuEntity
-export const skuTable = pgTable("sku", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  tenantId: integer("tenant_id"),
-  name: varchar({ length: 255 }).notNull(),
-  skuCode: varchar("sku_code", { length: 100 }).notNull().unique(),
-  quantity: integer().notNull().default(0),
-  reorderThreshold: integer("reorder_threshold").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const skuTable = pgTable(
+  "sku",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    tenantId: integer("tenant_id"),
+    name: varchar({ length: 255 }).notNull(),
+    skuCode: varchar("sku_code", { length: 100 }).notNull().unique(),
+    quantity: integer().notNull().default(0),
+    reorderThreshold: integer("reorder_threshold").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [check("sku_quantity_non_negative", sql`${table.quantity} >= 0`)]
+);
 
 // Invoicing domain — InvoiceEntity
 export const invoiceTable = pgTable("invoice", {

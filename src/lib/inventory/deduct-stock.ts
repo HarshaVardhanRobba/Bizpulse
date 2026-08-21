@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/lib/shared/not-found-error";
+import { ValidationError } from "@/lib/shared/validation-error";
 import { InventoryRepository, type DbExecutor } from "./inventory-repository";
 import { SkuEntity } from "./sku-entity";
 
@@ -12,10 +12,8 @@ export async function deductStock(
   tx: DbExecutor,
   repository: InventoryRepository = new InventoryRepository()
 ): Promise<SkuEntity> {
-  const sku = await repository.findById(input.skuId, tx);
-  if (!sku) {
-    throw new NotFoundError("Sku", input.skuId);
+  if (input.amount <= 0) {
+    throw new ValidationError("amount must be positive");
   }
-  const updated = sku.withStockLevel(sku.stockLevel.deduct(input.amount));
-  return repository.save(updated, tx);
+  return repository.decrementQuantity(input.skuId, input.amount, tx);
 }
